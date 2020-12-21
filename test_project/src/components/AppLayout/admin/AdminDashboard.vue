@@ -19,12 +19,36 @@ export default {
 	},
 	data () {
 		return {
-			vehicleCount: 0			
+			vehicleCount: 0	
 		}
 	},
 	computed: {
 		vCount (){
 			return this.$store.getters.products.length			
+		},
+		lastUpdatedData () {
+			let resData = this.$store.getters.products;
+			var ifNumber = ''
+			var lastSeen = '2020-10-10 00:00:00'
+			var secNumber = ''
+			for(var i = 0; i < resData.length; i++){
+				ifNumber = new Date(resData[i].lastseen).getTime();
+				ifNumber = ifNumber / 1000;
+				if(!isNaN(ifNumber)){
+					if(i > 0){
+						secNumber = new Date(resData[i - 1].lastseen).getTime();
+						if(!isNaN(secNumber)){
+							if(ifNumber > secNumber){
+								lastSeen = resData[i].lastseen;
+							}							
+						}						
+					}else{
+						lastSeen = resData[i].lastseen;
+					}
+					
+				}								
+			}
+			return lastSeen;
 		},
 		runningVehicle () {
 			let resData = this.$store.getters.products;

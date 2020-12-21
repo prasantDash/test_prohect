@@ -16,7 +16,7 @@ export default{
 				labels: [],
 				datasets: [
 					{
-						label: 'Live Status',
+						label: 'Speed',
 						backgroundColor: '#f87979',
 						pointBackgroundColor: 'white',
 						borderWidth: 1,
@@ -50,15 +50,13 @@ export default{
 		}
 	},
 	mounted () {
-		let resData = this.$store.getters.products
-		
+		let resData = this.$store.getters.products		
 		let vName = []
-		let vSpeed = []
-
-		for(var i = 0; i < resData.length; i++){
+		let vSpeed = []		
+		for(var i = 0; i < resData.length; i++){			
 			vName.push(resData[i].name)
 			vSpeed.push(Number(resData[i].speed))
-		}
+		}		
 		this.datacollection.labels = vName
 		this.datacollection.datasets[0].data = vSpeed				
 
@@ -69,7 +67,7 @@ export default{
 <style scoped>
 #bar-chart{
 	display: block !important;
-    width: 332px !important;
+    //width: 332px !important;
     height: 200px !important;
 }
 </style>
