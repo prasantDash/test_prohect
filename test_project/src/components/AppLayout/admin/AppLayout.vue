@@ -28,21 +28,9 @@ export default {
 		document.head.appendChild(recaptchaScript)
 
 		recaptchaScript = document.createElement('script')
-		recaptchaScript.setAttribute('src', 'https://startbootstrap.github.io/startbootstrap-sb-admin/dist/assets/demo/chart-bar-demo.js')
-		document.head.appendChild(recaptchaScript)
-
-		recaptchaScript = document.createElement('script')
 		recaptchaScript.setAttribute('src', 'https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js')
-		document.head.appendChild(recaptchaScript)
-
-		recaptchaScript = document.createElement('script')
-		recaptchaScript.setAttribute('src', 'https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js')
-		document.head.appendChild(recaptchaScript)
-
-		recaptchaScript = document.createElement('script')
-		recaptchaScript.setAttribute('src', 'https://startbootstrap.github.io/startbootstrap-sb-admin/dist/assets/demo/datatables-demo.js')
-		document.head.appendChild(recaptchaScript)		
-    }, 
+		document.head.appendChild(recaptchaScript)				
+  }, 
 }
 </script>
 <style>

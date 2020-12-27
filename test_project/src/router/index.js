@@ -32,6 +32,16 @@ const routes = [
         path: 'about',
         name: 'AdminAboutus',
         component: () => import('../components/AppLayout/admin/AdminAboutus.vue')
+      },
+      {
+        path: 'vehicletrackinglive',
+        name: 'vehicletrackinglive',
+        component: () => import('../components/AppLayout/admin/VehicleTrackingLive.vue')
+      },
+      {
+        path: 'vehicletrackinghistory',
+        name: 'vehicletrackinghistory',
+        component: () => import('../components/AppLayout/admin/VehicleTrackingHistory.vue')
       }
     ]
   },

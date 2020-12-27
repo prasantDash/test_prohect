@@ -16,7 +16,7 @@ export default {
   },
   created: function(){
     this.loginUserName = localStorage.loginUserName
-    console.log(this.loginUserName);
+    //console.log(this.loginUserName);
   }  
 }
 </script>
