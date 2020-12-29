@@ -9,7 +9,7 @@ import L from "leaflet"
 import $ from 'jquery'
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css"
 import "leaflet-routing-machine/dist/leaflet-routing-machine.js"
-import animationCar from "leaflet/dist/images/car.gif"
+import animationCar from "leaflet/dist/images/car.png"
 
 
 export default {
@@ -25,55 +25,54 @@ export default {
 	methods: {
 		setupLeafletMap: function () {
 			testPage.test();
-			var bikeIcon = L.icon({
-				iconUrl: animationCar,
-				iconSize: [50, 50],
-				iconAnchor: [12, 39],
-				shadowUrl: null
-			});
+			
+
+			var vCords = [
+				[14.252125,76.661818],
+				[14.251962,76.661388],
+				[14.252012,76.661255],
+				[14.252115,76.661410],
+				[14.252230,76.661400],
+				[14.252385,76.661748],
+				[14.251963,76.661467],
+				[14.251962,76.661492],
+				[14.251933,76.661488],
+				[14.252140,76.661410],
+				[14.252343,76.661753],
+				[14.252000,76.661520],
+				[14.252055,76.661675],
+				[14.252090,76.661448],
+				[14.252233,76.661420],
+				[14.251962,76.661492],
+				[14.246143,76.664345],
+				[14.240547,76.666103],
+				[14.234995,76.667763],
+				[14.228318,76.667718],
+				[14.221763,76.667618],
+				[14.215165,76.667498],
+				[14.207700,76.667372],
+				[14.200923,76.667228]
+			];
 
 			var config = {
 				tileUrl : 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
 				overlayTileUrl : 'http://{s}.tiles.mapbox.com/v3/intertwine.nyc_bike_overlay/{z}/{x}/{y}.png',
 				tileAttrib : 'Open Street Map',
-				initLatLng : new L.LatLng(14.252125,76.661818), // NYC
-				initZoom : 15,
-				maxZoom : 18
+				initLatLng : new L.LatLng(vCords[0][0],vCords[0][1]), // NYC
+				initZoom : 14,
+				maxZoom : 14
 			};
 
-			console.log(config);
+			var bikeIcon = L.icon({
+				iconUrl: animationCar,
+				iconSize: [30, 25],
+				shadowUrl: null
+			});
+
+			
 
 			var map = L.map('map', {minZoom: config.minZoom, maxZoom: config.maxZoom}),
-			routeLines = [
-				L.polyline(
-					[
-						[14.252125,76.661818],
-						[14.251962,76.661388],
-						[14.252012,76.661255],
-						[14.252115,76.661410],
-						[14.252230,76.661400],
-						[14.252385,76.661748],
-						[14.251963,76.661467],
-						[14.251962,76.661492],
-						[14.251933,76.661488],
-						[14.252140,76.661410],
-						[14.252343,76.661753],
-						[14.252000,76.661520],
-						[14.252055,76.661675],
-						[14.252090,76.661448],
-						[14.252233,76.661420],
-						[14.251962,76.661492],
-						[14.246143,76.664345],
-						[14.240547,76.666103],
-						[14.234995,76.667763],
-						[14.228318,76.667718],
-						[14.221763,76.667618],
-						[14.215165,76.667498],
-						[14.207700,76.667372],
-						[14.200923,76.667228]
-					]
-				)
-			],markers = [];
+			routeLines = [L.polyline(vCords)],markers = [];
 
 			map.addLayer(new L.TileLayer(config.tileUrl, {attribution: config.tileAttrib}));
 			map.addLayer(new L.TileLayer(config.overlayTileUrl));
@@ -87,15 +86,22 @@ export default {
                     interval: 5000,
 					autoStart: true,
 					onEnd: function() {
-
+						/*
 						$(this._shadow).fadeOut();
 						$(this._icon).fadeOut(3000, function(){
 							alert("Animation end");
 							map.removeLayer(this);
 						});
+						*/
+						
 					}
 				});
-
+				marker.on("move", function(e){
+					console.log(e);
+					var ang = Math.atan((e.latlng.lat-e.oldLatLng.lat)/(e.latlng.lat-e.oldLatLng.lng));
+					console.log(ang);
+					map.setView(new L.LatLng(e.oldLatLng.lat, e.oldLatLng.lng), 14);
+				});
 				map.addLayer(marker);
 				markers.push(marker);
 			});
