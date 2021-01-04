@@ -2,7 +2,41 @@
 	<main>
 		<div class="container-fluid">
 			<h3 class="mt-4">{{ cName }}</h3>
-			<div id="map"></div>
+			<div class="row">
+				<div class="col-sm-8">
+					<div id="map"></div>
+				</div>
+				<div class="col-sm-4">
+					<div class="col-sm-12">
+						<h4>From Date</h4>
+						 <datetime format="YYYY-MM-DD h:i:s" width="300px" v-model="fromdate"></datetime>
+					</div>
+					<div class="col-sm-12">
+						<h4>To Date</h4>
+						 <datetime format="YYYY-MM-DD h:i:s" width="300px" v-model="todate"></datetime>
+					</div>
+					<div class="col-sm-12">
+						<select id=""getVehicle>
+							<option disabled value="">Please select one</option>
+							<option value="359710049136568">KA02AG2256</option>
+							<option value="359710049136568">KA02AG2256</option>
+						</select>
+					</div>
+					<div class="col-sm-12">
+						<hr>
+						<br>
+					</div>
+					<div class="col-sm-6">
+						<button type="button" class="btn btn-success btn-block" v-on:click = "startAnimation">start</button>
+					</div>
+					<div class="col-sm-6">
+						<button type="button" class="btn btn-danger btn-block" v-on:click = "stopAnimation">Stop</button>
+					</div>
+
+									
+				</div>
+			</div>
+			
 		</div>		
 	</main>	
 </div>

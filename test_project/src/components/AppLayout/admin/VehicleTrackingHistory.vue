@@ -2,6 +2,11 @@
 <script>
 //Plugin imported
 
+import Vue from 'vue'
+import axios from 'axios'
+import VueAxios from 'vue-axios'
+Vue.use(VueAxios, axios)
+
 import "leaflet/dist/leaflet.css"
 import "leaflet/dist/leaflet.js"
 import testPage from "leaflet/dist/test.js"
@@ -10,113 +15,131 @@ import $ from 'jquery'
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css"
 import "leaflet-routing-machine/dist/leaflet-routing-machine.js"
 import animationCar from "leaflet/dist/images/car.png"
+import datetime from 'vuejs-datetimepicker';
 
 
 export default {
+	components: { 
+		datetime
+	},
 	name:'VehicleTrackingHistory',
 	data () {
 		return {
 			cName:'Vehicle tracking(History)',
 			title:"Company",
-			myCords: []
+			//myCords: [],
+			vCords: [],
+			config: {},
+			bikeIcon: {},
+			mapInit: 1,
+			fromdate: '',
+			todate: ''
 
 		}
 	},
 	methods: {
-		setupLeafletMap: function () {
+		stopAnimation: function (){
+			alert('stop amnimation');
+		},
+		startAnimation: function(){
+			console.log(this.fromdate)
+			console.log(this.fromdate)			
 			testPage.test();
-			
 
-			var vCords = [
-				[14.252125,76.661818],
-				[14.251962,76.661388],
-				[14.252012,76.661255],
-				[14.252115,76.661410],
-				[14.252230,76.661400],
-				[14.252385,76.661748],
-				[14.251963,76.661467],
-				[14.251962,76.661492],
-				[14.251933,76.661488],
-				[14.252140,76.661410],
-				[14.252343,76.661753],
-				[14.252000,76.661520],
-				[14.252055,76.661675],
-				[14.252090,76.661448],
-				[14.252233,76.661420],
-				[14.251962,76.661492],
-				[14.246143,76.664345],
-				[14.240547,76.666103],
-				[14.234995,76.667763],
-				[14.228318,76.667718],
-				[14.221763,76.667618],
-				[14.215165,76.667498],
-				[14.207700,76.667372],
-				[14.200923,76.667228]
-			];
-
-			var config = {
-				tileUrl : 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-				overlayTileUrl : 'http://{s}.tiles.mapbox.com/v3/intertwine.nyc_bike_overlay/{z}/{x}/{y}.png',
-				tileAttrib : 'Open Street Map',
-				initLatLng : new L.LatLng(vCords[0][0],vCords[0][1]), // NYC
-				initZoom : 14,
-				maxZoom : 14
+			let liveDataUrl = 'http://devapi.trackervigil.com/vehiclehistorydata'
+			let  header = {
+				headers: {
+					Authorization: localStorage.getItem('tocken')
+				}			
 			};
+			let article = {
+				imei: '359710049136568',
+				rtoNumber: 'KA02AG2256',
+				fromDate: '2019-12-30 00:00:30',
+				todate: '2020-01-30 00:00:30' 
+			}
+			var map,routeLines = [],markers = [];
+			axios.post(liveDataUrl,article,header).then((res) => {
+				console.log(res.data)
+				
+				var vData = res.data.data;
+				
+				var tmpData = []
+				for(var i = 0; i < vData.length; i++){
+					tmpData = [];
+					tmpData.push(Number(vData[i].lat))
+					tmpData.push(Number(vData[i].lng))
+					this.vCords.push(tmpData);
+				}
+				
+				this.config = {
+					tileUrl : 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+					overlayTileUrl : 'http://{s}.tiles.mapbox.com/v3/intertwine.nyc_bike_overlay/{z}/{x}/{y}.png',
+					tileAttrib : 'Open Street Map',
+					initLatLng : new L.LatLng(this.vCords[0][0],this.vCords[0][1]), // NYC
+					initZoom : 14,
+					maxZoom : 18
+				};
 
-			var bikeIcon = L.icon({
-				iconUrl: animationCar,
-				iconSize: [30, 25],
-				shadowUrl: null
-			});
+				var bikeIcon = L.icon({
+					iconUrl: animationCar,
+					iconSize: [25, 25],
+					shadowUrl: null,
+					className: 'RotatedMarker'
+				});
+
+				
+				if(this.mapInit == 1){
+					map = L.map('map', {minZoom: this.config.minZoom, maxZoom: this.config.maxZoom});
+					routeLines = [
+						L.polyline(this.vCords)
+					];
+					markers = [];				
+
+					map.addLayer(new L.TileLayer(this.config.tileUrl, {attribution: this.config.tileAttrib}));
+					map.addLayer(new L.TileLayer(this.config.overlayTileUrl));
+					map.setView(this.config.initLatLng, this.config.initZoom);
+
+					this.mapInit = 0;
+				}
+
+				$.each(routeLines, function(i, routeLine) {
+
+					var marker = L.animatedMarker(routeLine.getLatLngs(), {
+						icon: bikeIcon,
+						distance: 500,
+						interval: 5000,
+						autoStart: true,
+						onEnd: function() {}
+					});
+					
+					marker.on("move", function(e){
+						console.log(e);
+						var ang = Math.atan((e.latlng.lat-e.oldLatLng.lat)/(e.latlng.lat-e.oldLatLng.lng));
+						console.log(ang);
+						map.setView(new L.LatLng(e.oldLatLng.lat, e.oldLatLng.lng));
+					});
+					map.addLayer(marker);
+					markers.push(marker);
+					marker.stop();
+				});
+				$.each(markers, function(i, marker) {
+					marker.start();
+				});
+
+				$(this).hide();
+			})
+			
+					
 
 			
-
-			var map = L.map('map', {minZoom: config.minZoom, maxZoom: config.maxZoom}),
-			routeLines = [L.polyline(vCords)],markers = [];
-
-			map.addLayer(new L.TileLayer(config.tileUrl, {attribution: config.tileAttrib}));
-			map.addLayer(new L.TileLayer(config.overlayTileUrl));
-			map.setView(config.initLatLng, config.initZoom);
-
-			$.each(routeLines, function(i, routeLine) {
-
-				var marker = L.animatedMarker(routeLine.getLatLngs(), {
-					icon: bikeIcon,
-					distance: 300,
-                    interval: 5000,
-					autoStart: true,
-					onEnd: function() {
-						/*
-						$(this._shadow).fadeOut();
-						$(this._icon).fadeOut(3000, function(){
-							alert("Animation end");
-							map.removeLayer(this);
-						});
-						*/
-						
-					}
-				});
-				marker.on("move", function(e){
-					console.log(e);
-					var ang = Math.atan((e.latlng.lat-e.oldLatLng.lat)/(e.latlng.lat-e.oldLatLng.lng));
-					console.log(ang);
-					map.setView(new L.LatLng(e.oldLatLng.lat, e.oldLatLng.lng), 14);
-				});
-				map.addLayer(marker);
-				markers.push(marker);
-			});
-			$.each(markers, function(i, marker) {
-				marker.start();
-			});
-
-			$(this).hide();	
 		}
 	},
 	mounted() {
-		this.setupLeafletMap()
+		//this.setupLeafletMap()
 	},
 	created() {
-		this.myCords = [14.252125,76.661818]				
+		//this.myCords = [14.252125,76.661818]				
 	}
 }
 </script>
@@ -125,6 +148,15 @@ export default {
 	height: 550px;
 	border: 6px solid #d6c3c3;
 	border-radius: 5px;
+}
+
+img.RotatedMarker{
+	
+}
+
+@keyframes mymove {
+	from {background-color: red;}
+	to {background-color: blue;}
 }
 
 
