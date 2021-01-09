@@ -14,7 +14,8 @@ import L from "leaflet"
 import $ from 'jquery'
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css"
 import "leaflet-routing-machine/dist/leaflet-routing-machine.js"
-import animationCar from "leaflet/dist/images/car.png"
+//import animationCar from "leaflet/dist/images/car.png"
+import animationTruck from "leaflet/dist/images/truck.gif"
 import datetime from 'vuejs-datetimepicker';
 
 
@@ -27,23 +28,39 @@ export default {
 		return {
 			cName:'Vehicle tracking(History)',
 			title:"Company",
-			//myCords: [],
 			vCords: [],
 			config: {},
-			bikeIcon: {},
-			mapInit: 1,
 			fromdate: '',
-			todate: ''
+			todate: '',
+			vehicleList: '',
+			marker: {},
+			routeLines: [],
+			markers: [],
+			mapInit: true
 
 		}
 	},
 	methods: {
 		stopAnimation: function (){
-			alert('stop amnimation');
+			this.marker.stop();
+		},
+		resumeAnimation: function (){
+			this.marker.start();
 		},
 		startAnimation: function(){
-			console.log(this.fromdate)
-			console.log(this.fromdate)			
+			if(this.vehicleList == ""){
+				alert("Please select vehicle");
+				return false;
+			}
+			if(this.fromdate == ""){
+				alert("Please select from date");
+				return false;
+			}
+
+			if(this.todate == ""){
+				alert("Please select todate date");
+				return false;
+			}
 			testPage.test();
 
 			let liveDataUrl = 'http://devapi.trackervigil.com/vehiclehistorydata'
@@ -53,93 +70,106 @@ export default {
 				}			
 			};
 			let article = {
-				imei: '359710049136568',
+				imei: this.vehicleList,
 				rtoNumber: 'KA02AG2256',
-				fromDate: '2019-12-30 00:00:30',
-				todate: '2020-01-30 00:00:30' 
+				fromDate: this.fromdate,
+				todate: this.todate 
 			}
-			var map,routeLines = [],markers = [];
+			var map;
 			axios.post(liveDataUrl,article,header).then((res) => {
-				console.log(res.data)
-				
 				var vData = res.data.data;
-				
-				var tmpData = []
-				for(var i = 0; i < vData.length; i++){
-					tmpData = [];
-					tmpData.push(Number(vData[i].lat))
-					tmpData.push(Number(vData[i].lng))
-					this.vCords.push(tmpData);
-				}
-				
-				this.config = {
-					tileUrl : 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-					overlayTileUrl : 'http://{s}.tiles.mapbox.com/v3/intertwine.nyc_bike_overlay/{z}/{x}/{y}.png',
-					tileAttrib : 'Open Street Map',
-					initLatLng : new L.LatLng(this.vCords[0][0],this.vCords[0][1]), // NYC
-					initZoom : 14,
-					maxZoom : 18
-				};
+				console.log(res);
 
-				var bikeIcon = L.icon({
-					iconUrl: animationCar,
-					iconSize: [25, 25],
-					shadowUrl: null,
-					className: 'RotatedMarker'
-				});
+				if(vData.length > 1){
 
-				
-				if(this.mapInit == 1){
-					map = L.map('map', {minZoom: this.config.minZoom, maxZoom: this.config.maxZoom});
-					routeLines = [
-						L.polyline(this.vCords)
-					];
-					markers = [];				
+					var tmpData = []
+					for(var i = 0; i < vData.length; i++){
+						tmpData = [];
+						tmpData.push(Number(vData[i].lat))
+						tmpData.push(Number(vData[i].lng))
+						this.vCords.push(tmpData);
+					}
+					this.routeLines = L.polyline(this.vCords)
+					this.markers = []					
 
-					map.addLayer(new L.TileLayer(this.config.tileUrl, {attribution: this.config.tileAttrib}));
-					map.addLayer(new L.TileLayer(this.config.overlayTileUrl));
-					map.setView(this.config.initLatLng, this.config.initZoom);
+					var vehicleIcom = L.icon({
+						iconSize: [25, 25],
+						shadowUrl: null
+					});
+					
+					vehicleIcom.options.iconUrl = animationTruck
+					this.config.initLatLng = new L.LatLng(this.vCords[0][0],this.vCords[0][1])
+					
+					if(this.mapInit){
+						map = L.map('map', {
+							minZoom: this.config.minZoom,
+							maxZoom: this.config.maxZoom
+						});
+						map.addLayer(new L.TileLayer(this.config.tileUrl, {attribution: this.config.tileAttrib}));
+						map.addLayer(new L.TileLayer(this.config.overlayTileUrl));
+						map.setView(this.config.initLatLng, this.config.initZoom);
+						this.mapInit = false
+					}
+					
+					
+										
 
-					this.mapInit = 0;
-				}
-
-				$.each(routeLines, function(i, routeLine) {
-
-					var marker = L.animatedMarker(routeLine.getLatLngs(), {
-						icon: bikeIcon,
-						distance: 500,
+					this.marker = L.animatedMarker(this.routeLines.getLatLngs(), {
+						icon: vehicleIcom,
+						distance: 300,
 						interval: 5000,
 						autoStart: true,
-						onEnd: function() {}
+						onEnd: function() {
+							alert("Animation ended");
+						}
 					});
 					
-					marker.on("move", function(e){
-						console.log(e);
-						var ang = Math.atan((e.latlng.lat-e.oldLatLng.lat)/(e.latlng.lat-e.oldLatLng.lng));
-						console.log(ang);
+					this.marker.on("move", function(e){
+						//console.log(e);
 						map.setView(new L.LatLng(e.oldLatLng.lat, e.oldLatLng.lng));
 					});
-					map.addLayer(marker);
-					markers.push(marker);
-					marker.stop();
-				});
-				$.each(markers, function(i, marker) {
-					marker.start();
-				});
-
-				$(this).hide();
-			})
-			
+					map.addLayer(this.marker);
+					this.markers.push(this.marker);
 					
-
-			
+					$(this).hide();
+				}else{
+					alert("No data found");
+					return false;
+				}
+				
+				
+			})		
 		}
 	},
 	mounted() {
 		//this.setupLeafletMap()
 	},
 	created() {
-		//this.myCords = [14.252125,76.661818]				
+		this.config = {
+			tileUrl: 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+			overlayTileUrl: 'http://{s}.tiles.mapbox.com/v3/intertwine.nyc_bike_overlay/{z}/{x}/{y}.png',
+			tileAttrib: 'Open Street Map',
+			initZoom: 14,
+			maxZoom: 18,
+			minZoom:14
+		};			
+	},
+	computed: {
+		vehicleData: function(){
+			let resData = this.$store.getters.products
+			let vehicleImet = [],tmp = [];
+			for(var i = 0; i < resData.length; i++){
+				
+				tmp = [];
+
+				tmp.push(resData[i].deviceid)
+				tmp.push(resData[i].name)
+				
+				vehicleImet.push(tmp)
+			}
+			
+			return vehicleImet;
+		} 
 	}
 }
 </script>
@@ -150,9 +180,7 @@ export default {
 	border-radius: 5px;
 }
 
-img.RotatedMarker{
-	
-}
+
 
 @keyframes mymove {
 	from {background-color: red;}
