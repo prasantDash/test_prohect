@@ -122,7 +122,7 @@ export default {
 					});
 					
 					if(res.data.type == 3){
-						this.vehicleImg = 'https://www.trackervigil.com/svgicons/res/FuelTankTruck_Right_Grey.svg'
+						this.vehicleImg = 'https://www.trackervigil.com/svgicons/res/Car_Right_Red.svg'
 						vehicleIcom.options.iconUrl = animationCar
 					}else{
 						this.vehicleImg = 'https://www.trackervigil.com/svgicons/res/FuelTankTruck_Right_Grey.svg'
