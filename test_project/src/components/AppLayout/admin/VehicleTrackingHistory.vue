@@ -2,6 +2,11 @@
 <script>
 //Plugin imported
 
+import Vue from 'vue'
+import axios from 'axios'
+import VueAxios from 'vue-axios'
+Vue.use(VueAxios, axios)
+
 import "leaflet/dist/leaflet.css"
 import "leaflet/dist/leaflet.js"
 import testPage from "leaflet/dist/test.js"
@@ -9,114 +14,162 @@ import L from "leaflet"
 import $ from 'jquery'
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css"
 import "leaflet-routing-machine/dist/leaflet-routing-machine.js"
-import animationCar from "leaflet/dist/images/car.png"
+//import animationCar from "leaflet/dist/images/car.png"
+import animationTruck from "leaflet/dist/images/truck.gif"
+import datetime from 'vuejs-datetimepicker';
 
 
 export default {
+	components: { 
+		datetime
+	},
 	name:'VehicleTrackingHistory',
 	data () {
 		return {
 			cName:'Vehicle tracking(History)',
 			title:"Company",
-			myCords: []
+			vCords: [],
+			config: {},
+			fromdate: '',
+			todate: '',
+			vehicleList: '',
+			marker: {},
+			routeLines: [],
+			markers: [],
+			mapInit: true
 
 		}
 	},
 	methods: {
-		setupLeafletMap: function () {
+		stopAnimation: function (){
+			this.marker.stop();
+		},
+		resumeAnimation: function (){
+			this.marker.start();
+		},
+		startAnimation: function(){
+			if(this.vehicleList == ""){
+				alert("Please select vehicle");
+				return false;
+			}
+			if(this.fromdate == ""){
+				alert("Please select from date");
+				return false;
+			}
+
+			if(this.todate == ""){
+				alert("Please select todate date");
+				return false;
+			}
 			testPage.test();
-			
 
-			var vCords = [
-				[14.252125,76.661818],
-				[14.251962,76.661388],
-				[14.252012,76.661255],
-				[14.252115,76.661410],
-				[14.252230,76.661400],
-				[14.252385,76.661748],
-				[14.251963,76.661467],
-				[14.251962,76.661492],
-				[14.251933,76.661488],
-				[14.252140,76.661410],
-				[14.252343,76.661753],
-				[14.252000,76.661520],
-				[14.252055,76.661675],
-				[14.252090,76.661448],
-				[14.252233,76.661420],
-				[14.251962,76.661492],
-				[14.246143,76.664345],
-				[14.240547,76.666103],
-				[14.234995,76.667763],
-				[14.228318,76.667718],
-				[14.221763,76.667618],
-				[14.215165,76.667498],
-				[14.207700,76.667372],
-				[14.200923,76.667228]
-			];
-
-			var config = {
-				tileUrl : 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-				overlayTileUrl : 'http://{s}.tiles.mapbox.com/v3/intertwine.nyc_bike_overlay/{z}/{x}/{y}.png',
-				tileAttrib : 'Open Street Map',
-				initLatLng : new L.LatLng(vCords[0][0],vCords[0][1]), // NYC
-				initZoom : 14,
-				maxZoom : 14
+			let liveDataUrl = 'http://devapi.trackervigil.com/vehiclehistorydata'
+			let  header = {
+				headers: {
+					Authorization: localStorage.getItem('tocken')
+				}			
 			};
+			let article = {
+				imei: this.vehicleList,
+				rtoNumber: 'KA02AG2256',
+				fromDate: this.fromdate,
+				todate: this.todate 
+			}
+			var map;
+			axios.post(liveDataUrl,article,header).then((res) => {
+				var vData = res.data.data;
+				console.log(res);
 
-			var bikeIcon = L.icon({
-				iconUrl: animationCar,
-				iconSize: [30, 25],
-				shadowUrl: null
-			});
+				if(vData.length > 1){
 
-			
-
-			var map = L.map('map', {minZoom: config.minZoom, maxZoom: config.maxZoom}),
-			routeLines = [L.polyline(vCords)],markers = [];
-
-			map.addLayer(new L.TileLayer(config.tileUrl, {attribution: config.tileAttrib}));
-			map.addLayer(new L.TileLayer(config.overlayTileUrl));
-			map.setView(config.initLatLng, config.initZoom);
-
-			$.each(routeLines, function(i, routeLine) {
-
-				var marker = L.animatedMarker(routeLine.getLatLngs(), {
-					icon: bikeIcon,
-					distance: 300,
-                    interval: 5000,
-					autoStart: true,
-					onEnd: function() {
-						/*
-						$(this._shadow).fadeOut();
-						$(this._icon).fadeOut(3000, function(){
-							alert("Animation end");
-							map.removeLayer(this);
-						});
-						*/
-						
+					var tmpData = []
+					for(var i = 0; i < vData.length; i++){
+						tmpData = [];
+						tmpData.push(Number(vData[i].lat))
+						tmpData.push(Number(vData[i].lng))
+						this.vCords.push(tmpData);
 					}
-				});
-				marker.on("move", function(e){
-					console.log(e);
-					var ang = Math.atan((e.latlng.lat-e.oldLatLng.lat)/(e.latlng.lat-e.oldLatLng.lng));
-					console.log(ang);
-					map.setView(new L.LatLng(e.oldLatLng.lat, e.oldLatLng.lng), 14);
-				});
-				map.addLayer(marker);
-				markers.push(marker);
-			});
-			$.each(markers, function(i, marker) {
-				marker.start();
-			});
+					this.routeLines = L.polyline(this.vCords)
+					this.markers = []					
 
-			$(this).hide();	
+					var vehicleIcom = L.icon({
+						iconSize: [25, 25],
+						shadowUrl: null
+					});
+					
+					vehicleIcom.options.iconUrl = animationTruck
+					this.config.initLatLng = new L.LatLng(this.vCords[0][0],this.vCords[0][1])
+					
+					if(this.mapInit){
+						map = L.map('map', {
+							minZoom: this.config.minZoom,
+							maxZoom: this.config.maxZoom
+						});
+						map.addLayer(new L.TileLayer(this.config.tileUrl, {attribution: this.config.tileAttrib}));
+						map.addLayer(new L.TileLayer(this.config.overlayTileUrl));
+						map.setView(this.config.initLatLng, this.config.initZoom);
+						this.mapInit = false
+					}
+					
+					
+										
+
+					this.marker = L.animatedMarker(this.routeLines.getLatLngs(), {
+						icon: vehicleIcom,
+						distance: 300,
+						interval: 5000,
+						autoStart: true,
+						onEnd: function() {
+							alert("Animation ended");
+						}
+					});
+					
+					this.marker.on("move", function(e){
+						//console.log(e);
+						map.setView(new L.LatLng(e.oldLatLng.lat, e.oldLatLng.lng));
+					});
+					map.addLayer(this.marker);
+					this.markers.push(this.marker);
+					
+					$(this).hide();
+				}else{
+					alert("No data found");
+					return false;
+				}
+				
+				
+			})		
 		}
 	},
 	mounted() {
-		this.setupLeafletMap()
+		//this.setupLeafletMap()
 	},
 	created() {
-		this.myCords = [14.252125,76.661818]				
+		this.config = {
+			tileUrl: 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+			overlayTileUrl: 'http://{s}.tiles.mapbox.com/v3/intertwine.nyc_bike_overlay/{z}/{x}/{y}.png',
+			tileAttrib: 'Open Street Map',
+			initZoom: 14,
+			maxZoom: 18,
+			minZoom:14
+		};			
+	},
+	computed: {
+		vehicleData: function(){
+			let resData = this.$store.getters.products
+			let vehicleImet = [],tmp = [];
+			for(var i = 0; i < resData.length; i++){
+				
+				tmp = [];
+
+				tmp.push(resData[i].deviceid)
+				tmp.push(resData[i].name)
+				
+				vehicleImet.push(tmp)
+			}
+			
+			return vehicleImet;
+		} 
 	}
 }
 </script>
@@ -125,6 +178,13 @@ export default {
 	height: 550px;
 	border: 6px solid #d6c3c3;
 	border-radius: 5px;
+}
+
+
+
+@keyframes mymove {
+	from {background-color: red;}
+	to {background-color: blue;}
 }
 
 
