@@ -4,10 +4,10 @@
 
 import "leaflet/dist/leaflet.css"
 import L from "leaflet"
-import DatatableFactory from 'vuejs-datatable'
+//import DatatableFactory from 'vuejs-datatable'
 
 export default {
-	components: { DatatableFactory },
+	//components: { DatatableFactory },
 	name:'VehicleTrackingLive',
 	data () {
 		return {

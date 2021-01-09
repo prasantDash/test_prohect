@@ -24,9 +24,27 @@
 						</div>
 						
 					</div>
-					<div class="col-sm-12">
+					<br>
+					<div class="col-sm-6">
 						<hr>
-						<br>
+						<h3>
+							<span>{{ rtoNumber }}</span>	
+						</h3>
+						
+					</div>
+					<br>
+					<br>
+					<div class="col-sm-6">
+						<hr>
+						<h3>
+							<span>{{ vehCategory }}</span>	
+						</h3>						
+					</div>
+					<br>
+					<div class="col-sm-12">
+						
+						<img v-bind:src="vehicleImg" style="height: 200px; width: 100%">
+						<hr>
 					</div>
 					<div class="col-sm-4">
 						<button type="button" class="btn btn-success btn-block" v-on:click = "startAnimation" title="Start tracking">start</button>
@@ -37,7 +55,7 @@
 					<div class="col-sm-4">
 						<button type="button" class="btn btn-warning btn-block" v-on:click = "resumeAnimation" title="Click to resume tracking">Resume</button>
 					</div>
-
+					
 									
 				</div>
 			</div>
