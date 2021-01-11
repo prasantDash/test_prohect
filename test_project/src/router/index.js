@@ -42,6 +42,11 @@ const routes = [
         path: 'vehicletrackinghistory',
         name: 'vehicletrackinghistory',
         component: () => import('../components/AppLayout/admin/VehicleTrackingHistory.vue')
+      },
+      {
+        path: 'singleVehicleTravelPath',
+        name: 'SingleVehicleTravelPath',
+        component: () => import('../components/AppLayout/admin/SingleVehicleTravelPath.vue')
       }
     ]
   },
